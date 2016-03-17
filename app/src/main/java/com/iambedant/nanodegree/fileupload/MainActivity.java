@@ -119,6 +119,16 @@ public class MainActivity extends AppCompatActivity {
 
         //If you want to open any file
         intent.setType("*/*");
+        
+        /*
+        //for pdf files
+         intent.setType("application/pdf");
+
+         //Multiple Mime Type
+         intent.setType("image/*|application/pdf|audio/*");
+
+         */
+
         intent.addCategory(Intent.CATEGORY_OPENABLE);
 
         // special intent for Samsung file manager
