@@ -25,7 +25,7 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    public final int PICKFILE_REQUEST_CODE =1;
+    public final int PICKFILE_REQUEST_CODE = 1;
     Context mContext;
 
     @Override
@@ -44,21 +44,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void toastUri(Uri fileUri)
-    {
-
-        Toast.makeText(mContext,fileUri.getPath().toString(),Toast.LENGTH_SHORT).show();
-    }
-
     private void uploadFile(Uri fileUri) {
         // create upload service client
         FileUploadService service =
                 ServiceGenerator.createService(FileUploadService.class);
 
         // use the FileUtils to get the actual file by uri
-        File file = new File(fileUri.getPath());
-
-     //   Toast.makeText(mContext,fileUri.getPath().toString(),Toast.LENGTH_SHORT).show();
+        File file = FileUtils.getFile(this, fileUri);
 
         // create RequestBody instance from file
         RequestBody requestFile =
@@ -75,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                         MediaType.parse("multipart/form-data"), descriptionString);
 
         // finally, execute the request
-        Call<ResponseBody> call = service.upload(description, body);
+        Call<ResponseBody> call = service.uploadPhoto(body);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call,
@@ -89,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -112,14 +105,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     public void openFile() {
 
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 
         //If you want to open any file
         intent.setType("*/*");
-        
+
         /*
         //for pdf files
          intent.setType("application/pdf");
@@ -138,12 +130,11 @@ public class MainActivity extends AppCompatActivity {
         sIntent.addCategory(Intent.CATEGORY_DEFAULT);
 
         Intent chooserIntent;
-        if (getPackageManager().resolveActivity(sIntent, 0) != null){
+        if (getPackageManager().resolveActivity(sIntent, 0) != null) {
             // it is device with samsung file manager
             chooserIntent = Intent.createChooser(sIntent, "Open file");
-            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] { intent});
-        }
-        else {
+            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{intent});
+        } else {
             chooserIntent = Intent.createChooser(intent, "Open file");
         }
 
@@ -154,17 +145,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
-    protected void onActivityResult(int requestCode,int resultCode,Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if(requestCode == PICKFILE_REQUEST_CODE){
+        if (requestCode == PICKFILE_REQUEST_CODE) {
 
-            if(resultCode == RESULT_OK){
-
-                //the selected audio.
+            if (resultCode == RESULT_OK) {
                 Uri uri = data.getData();
-                toastUri(uri);
-              //  Toast.makeText(mContext,uri.toString(),Toast.LENGTH_LONG).show();
+                uploadFile(uri);
+                // toastUri(uri);
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
