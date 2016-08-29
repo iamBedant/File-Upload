@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -18,7 +19,6 @@ import java.io.File;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     public final int PICKFILE_REQUEST_CODE = 1;
     Context mContext;
+    TextView mTextViewResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mContext = this;
+        mTextViewResult = (TextView) findViewById(R.id.result);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,29 +60,62 @@ public class MainActivity extends AppCompatActivity {
 
         // MultipartBody.Part is used to send also the actual file name
         MultipartBody.Part body =
-                MultipartBody.Part.createFormData("picture", file.getName(), requestFile);
+                MultipartBody.Part.createFormData("image_request[image]", file.getName(), requestFile);
 
         // add another part within the multipart request
-        String descriptionString = "hello, this is description speaking";
+        String descriptionString = "en-US";
         RequestBody description =
                 RequestBody.create(
                         MediaType.parse("multipart/form-data"), descriptionString);
 
         // finally, execute the request
-        Call<ResponseBody> call = service.uploadPhoto(body);
-        call.enqueue(new Callback<ResponseBody>() {
+        mTextViewResult.setText("Requesting...");
+        Call<com.iambedant.nanodegree.fileupload.Response> call = service.uploadPhoto("CloudSight FZo7QixPuVNpXroQvmq8qg", description, body);
+        call.enqueue(new Callback<com.iambedant.nanodegree.fileupload.Response>() {
             @Override
-            public void onResponse(Call<ResponseBody> call,
-                                   Response<ResponseBody> response) {
+            public void onResponse(Call<com.iambedant.nanodegree.fileupload.Response> call,
+                                   Response<com.iambedant.nanodegree.fileupload.Response> response) {
                 Log.v("Upload", "success");
+                if (response.body().getStatus().equals("completed")) {
+                    mTextViewResult.setText(response.body().getName()+"");
+                } else if (response.body().getStatus().equals("not completed")) {
+                    getResult(response.body().getToken());
+                }
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            public void onFailure(Call<com.iambedant.nanodegree.fileupload.Response> call, Throwable t) {
                 Log.e("Upload error:", t.getMessage());
             }
         });
     }
+
+
+    public void getResult(String token) {
+        FileUploadService service =
+                ServiceGenerator.createService(FileUploadService.class);
+
+        mTextViewResult.setText("Requesting...");
+        Call<com.iambedant.nanodegree.fileupload.Response> call = service.getImage("CloudSight FZo7QixPuVNpXroQvmq8qg",token);
+        call.enqueue(new Callback<com.iambedant.nanodegree.fileupload.Response>() {
+            @Override
+            public void onResponse(Call<com.iambedant.nanodegree.fileupload.Response> call,
+                                   Response<com.iambedant.nanodegree.fileupload.Response> response) {
+                Log.v("Upload", "success");
+                if (response.body().getStatus().equals("completed")) {
+                    mTextViewResult.setText(response.body().getName()+"");
+                } else if (response.body().getStatus().equals("not completed")) {
+                    getResult(response.body().getToken());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<com.iambedant.nanodegree.fileupload.Response> call, Throwable t) {
+                Log.e("Upload error:", t.getMessage());
+            }
+        });
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
